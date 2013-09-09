@@ -1,7 +1,9 @@
 # Flattery [![Build Status](https://secure.travis-ci.org/evendis/flattery.png?branch=master)](http://travis-ci.org/evendis/flattery)
 
 Sometimes you want to do the non-DRY thing and repeat yourself, by caching values from associated records in a master model.
-the two main reasons you might want to do this are (a) for performance - to avoid joins in search queries and display, and (b) to save values from association records that are subject to deletion yet still have them available when looking at the master record - if you are using the [https://rubygems.org/gems/paranoid](paranoid) gem for example.
+The two main reasons you might want to do this are probably:
+* for performance - to avoid joins in search queries and display
+* to save values from association records that are subject to deletion yet still have them available when looking at the master record - if you are using the [https://rubygems.org/gems/paranoid](paranoid) gem for example.
 
 Hence flattery - a gem that provides a simple declarative method for caching and maintaining such values.
 
@@ -32,10 +34,10 @@ Or install it yourself as:
 
 ### How to define a model that has cached values from a :belongs_to association
 
-Given a model with a :category assoociation, and you want to cache instance.category.name as instance.category_name:
+Given a model with a :category assoociation, and you want to cache instance.category.name as instance.category_name.
 
-* First, add a migration to add :category_name column to your table with the same type as category.name
-* Then just include Flattery::ValueCache in your model and define flatten_values like this:
+First, add a migration to add :category_name column to your table with the same type as category.name.
+Then just include Flattery::ValueCache in your model and define flatten_values like this:
 
     class Note < ActiveRecord::Base
       belongs_to :category
