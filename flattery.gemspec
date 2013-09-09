@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Paul Gallagher"]
   spec.email         = ["paul@evendis.com"]
   spec.description   = %q{Flatten/normalise values from ActiveModel associations}
-  spec.summary       = %q{Flatten/normalise values from ActiveModel associations}
+  spec.summary       = %q{Flatter your nicely normalised AR models}
   spec.homepage      = "https://github.com/evendis/flattery"
   spec.license       = "MIT"
 
