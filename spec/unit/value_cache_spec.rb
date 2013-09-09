@@ -23,7 +23,18 @@ describe Flattery::ValueCache do
       it { should be_empty }
     end
 
-    context "with simple belongs_to associations" do
+    context "when reset with nil" do
+      let(:flatten_value_options) { {category: :name} }
+      it "should clear all settings" do
+        expect {
+          resource_class.flatten_value nil
+        }.to change {
+          resource_class.value_cache_options
+        }.to({})
+      end
+    end
+
+    context "with simple belongs_to association" do
 
       context "when set by association name and attribute value" do
         let(:flatten_value_options) { {category: :name} }
@@ -34,16 +45,28 @@ describe Flattery::ValueCache do
             changed_on: ["category_id"]
           }
         }) }
+      end
 
-        context "when force reset to nil" do
-          it "should clear all settings" do
-            expect {
-              resource_class.flatten_value nil
-            }.to change {
-              resource_class.value_cache_options
-            }.to({})
-          end
-        end
+      context "when given a cache column override" do
+        let(:flatten_value_options) { {category: :name, as: :cat_name} }
+        it { should eql({
+          "cat_name" => {
+            association_name: :category,
+            association_method: :name,
+            changed_on: ["category_id"]
+          }
+        }) }
+      end
+
+      context "when set using Strings" do
+        let(:flatten_value_options) { {'category' => 'name', 'as' => 'cat_name'} }
+        it { should eql({
+          "cat_name" => {
+            association_name: :category,
+            association_method: :name,
+            changed_on: ["category_id"]
+          }
+        }) }
       end
 
       context "when set by association name and invalid attribute value" do

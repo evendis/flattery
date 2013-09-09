@@ -8,8 +8,10 @@ ActiveRecord::Migration.suppress_messages do
       t.string :name;
       t.belongs_to :category;
       t.string :category_name;
+      t.string :cat_name;
       t.string :person_name;
       t.string :person_email;
+      t.string :user_email;
     end
 
     create_table(:categories, :force => true) do |t|
@@ -35,7 +37,7 @@ class Category < ActiveRecord::Base
 end
 
 class Person < ActiveRecord::Base
-  has_many :notes, inverse_of: :person
+  has_many :notes, primary_key: "username", foreign_key: "person_name", inverse_of: :person
 end
 
 module ArHelper

@@ -1,4 +1,6 @@
 require "active_support/core_ext"
 require "active_record"
 require "flattery/version"
+require "flattery/exception"
 require "flattery/value_cache"
+require "flattery/value_provider"

@@ -31,8 +31,8 @@ module Flattery::ValueCache
       opt = options.symbolize_keys
       as_setting = opt.delete(:as)
       association_name = opt.keys.first
-      association_method = opt[association_name]
-      cache_attribute = as_setting || "#{association_name}_#{association_method}"
+      association_method = opt[association_name].try(:to_sym)
+      cache_attribute = (as_setting || "#{association_name}_#{association_method}").to_s
 
       assoc = reflect_on_association(association_name)
       cache_options = if assoc && assoc.belongs_to? && assoc.klass.column_names.include?("#{association_method}")
@@ -50,8 +50,14 @@ module Flattery::ValueCache
       end
     end
 
+    # Returns the cache_column name given +association_name+ and +association_method+
+    def cache_attribute_for_association(association_name,association_method)
+      value_cache_options.detect{|k,v| v[:association_name] == association_name.to_sym &&  v[:association_method] ==  association_method.to_sym }.first
+    end
+
   end
 
+  # Command: updates cached values for related changed attributes
   def resolve_value_cache
     self.class.value_cache_options.each do |key,options|
       if changed & options[:changed_on]

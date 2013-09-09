@@ -14,7 +14,7 @@ If you are using NoSQL, you probably wouldn't design your schema in a way for wh
 
 * Ruby 1.9 or 2
 * Rails 3.x/4.x
-* ActiveRecord (only splite and PostgreQL tested. Others _should_ work; raise an issue if you find problems)
+* ActiveRecord (only sqlite and PostgreQL tested. Others _should_ work; raise an issue if you find problems)
 
 ## Installation
 
@@ -44,7 +44,6 @@ Then just include Flattery::ValueCache in your model and define flatten_values l
 
       include Flattery::ValueCache
       flatten_value :category => :name
-
     end
 
 ### How to cache the value in a specific column name
@@ -57,8 +56,37 @@ If you want to store in another column name, use the :as option on the +flatten_
 
       include Flattery::ValueCache
       flatten_value :category => :name, :as => 'cat_name'
-
     end
+
+### How to push updates to cached values from the source model
+
+Given a model with a :category assoociation, and a flattery config that caches instance.category.name to instance.category_name,
+you want the category_name cached value updated if the category.name changes.
+
+This is achieved by adding the Flattery::ValueProvider to the source model and defining push_flattened_values_for like this:
+
+    class Category < ActiveRecord::Base
+      has_many :notes
+
+      include Flattery::ValueProvider
+      push_flattened_values_for :name => :notes
+    end
+
+This will respect the flatten_value settings defined in that target mode (Note in this example).
+
+### How to push updates to cached values from the source model to a specific cache column name
+
+If the cache column name cannot be inferred correctly, an error will be raised. Inference errors can occur if the inverse association relation cannot be determined.
+
+To 'help' flattery figure out the correct column name, specify the column name with an :as option:
+
+    class Category < ActiveRecord::Base
+      has_many :notes
+
+      include Flattery::ValueProvider
+      push_flattened_values_for :name => :notes, :as => 'cat_name'
+    end
+
 
 
 ## Contributing
