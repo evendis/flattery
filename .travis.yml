@@ -1,0 +1,6 @@
+# These are specific configuration settings required for travis-ci
+# see http://travis-ci.org/evendis/flattery
+language: ruby
+rvm:
+  - 1.9.3
+  - 2.0.0

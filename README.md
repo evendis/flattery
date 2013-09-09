@@ -1,4 +1,4 @@
-# Flattery
+# Flattery [![Build Status](https://secure.travis-ci.org/evendis/flattery.png?branch=master)](http://travis-ci.org/evendis/flattery)
 
 Sometimes you want to do the non-DRY thing and repeat yourself, by caching values from associated records in a master model.
 the two main reasons you might want to do this are (a) for performance - to avoid joins in search queries and display, and (b) to save values from association records that are subject to deletion yet still have them available when looking at the master record - if you are using the [https://rubygems.org/gems/paranoid](paranoid) gem for example.
