@@ -1,5 +1,3 @@
+require "active_support/core_ext"
 require "flattery/version"
-
-module Flattery
-  # Your code goes here...
-end
+require "flattery/base"
