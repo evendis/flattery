@@ -3,8 +3,7 @@ module Flattery::ValueCache
 
   included do
     class_attribute :value_cache_options
-    self.value_cache_options = {}
-
+    self.value_cache_options = Settings.new(self)
     before_save Processor.new
   end
 
@@ -22,33 +21,12 @@ module Flattery::ValueCache
     # When explicitly passed nil, it clears all existing settings
     #
     def flatten_value(options={})
-      if options.nil?
-        self.value_cache_options = {}
-        return
-      end
-
-      self.value_cache_options ||= {}
-      return if options.empty?
-      self.value_cache_options[:settings] ||= []
-      self.value_cache_options[:resolved] = nil # clear resolved settings
-
-      opt = options.symbolize_keys
-      association_name = opt.keys.first
-      association_method = opt[association_name].try(:to_sym)
-      as_setting = opt.delete(:as).try(:to_s)
-
-      cache_options = {
-        association_name: association_name,
-        association_method: association_method,
-        as: as_setting
-      }
-
-      self.value_cache_options[:settings] << cache_options
+      self.value_cache_options.add_setting(options)
     end
-
 
   end
 
 end
 
+require "flattery/value_cache/settings"
 require "flattery/value_cache/processor"

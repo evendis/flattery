@@ -3,8 +3,7 @@ module Flattery::ValueProvider
 
   included do
     class_attribute :value_provider_options
-    self.value_provider_options = {}
-
+    self.value_provider_options = Settings.new(self)
     before_update Processor.new
   end
 
@@ -22,34 +21,12 @@ module Flattery::ValueProvider
     # When explicitly passed nil, it clears all existing settings
     #
     def push_flattened_values_for(options={})
-      if options.nil?
-        self.value_provider_options = {}
-        return
-      end
-
-      self.value_provider_options ||= {}
-      return if options.empty?
-      self.value_provider_options[:settings] ||= []
-      self.value_provider_options[:resolved] = nil # clear resolved settings
-
-      opt = options.symbolize_keys
-      as_setting = opt.delete(:as).try(:to_s)
-
-      association_method = opt.keys.first
-      association_name = opt[association_method].try(:to_sym)
-
-      cache_options = {
-        association_name: association_name,
-        association_method: association_method,
-        method: :update_all,
-        as: as_setting
-      }
-
-      self.value_provider_options[:settings] << cache_options
+      self.value_provider_options.add_setting(options)
     end
 
   end
 
 end
 
+require "flattery/value_provider/settings"
 require "flattery/value_provider/processor"
