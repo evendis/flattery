@@ -5,7 +5,7 @@ module Flattery::ValueCache
     class_attribute :value_cache_options
     self.value_cache_options = {}
 
-    before_save :resolve_value_cache
+    before_save Processor.new
   end
 
   module ClassMethods
@@ -57,14 +57,6 @@ module Flattery::ValueCache
 
   end
 
-  # Command: updates cached values for related changed attributes
-  def resolve_value_cache
-    self.class.value_cache_options.each do |key,options|
-      if changed & options[:changed_on]
-        self.send("#{key}=", self.send(options[:association_name]).try(:send,options[:association_method]))
-      end
-    end
-    true
-  end
-
 end
+
+require "flattery/value_cache/processor"

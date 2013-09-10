@@ -79,14 +79,15 @@ describe Flattery::ValueProvider do
     end
   end
 
-  describe "#resolve_value_provision" do
+  describe "#before_update" do
+    let(:processor_class) { Flattery::ValueProvider::Processor }
     it "should not be called when record created" do
-      resource_class.any_instance.should_receive(:resolve_value_provision).never
+      processor_class.any_instance.should_receive(:before_update).never
       resource_class.create!
     end
     it "should be called when record updated" do
       instance = resource_class.create!
-      instance.should_receive(:resolve_value_provision).and_return(true)
+      processor_class.any_instance.should_receive(:before_update).and_return(true)
       instance.save
     end
   end
