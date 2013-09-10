@@ -49,6 +49,11 @@ module ArHelper
     Person.delete_all
   end
 
+  def clear_harness_classes
+    Object.send(:remove_const, :ValueProviderHarness) if Object.constants.include?(:ValueProviderHarness)
+    Object.send(:remove_const, :ValueCacheHarness) if Object.constants.include?(:ValueCacheHarness)
+  end
+
 end
 
 RSpec.configure do |conf|

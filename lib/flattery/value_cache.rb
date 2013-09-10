@@ -28,32 +28,24 @@ module Flattery::ValueCache
       end
 
       self.value_cache_options ||= {}
+      return if options.empty?
+      self.value_cache_options[:settings] ||= []
+      self.value_cache_options[:resolved] = nil # clear resolved settings
+
       opt = options.symbolize_keys
-      as_setting = opt.delete(:as)
       association_name = opt.keys.first
       association_method = opt[association_name].try(:to_sym)
-      cache_attribute = (as_setting || "#{association_name}_#{association_method}").to_s
+      as_setting = opt.delete(:as).try(:to_s)
 
-      assoc = reflect_on_association(association_name)
-      cache_options = if assoc && assoc.belongs_to? && assoc.klass.column_names.include?("#{association_method}")
-        {
-          association_name: association_name,
-          association_method: association_method,
-          changed_on: [assoc.foreign_key]
-        }
-      end
+      cache_options = {
+        association_name: association_name,
+        association_method: association_method,
+        as: as_setting
+      }
 
-      if cache_options
-        self.value_cache_options[cache_attribute] = cache_options
-      else
-        self.value_cache_options.delete(cache_attribute)
-      end
+      self.value_cache_options[:settings] << cache_options
     end
 
-    # Returns the cache_column name given +association_name+ and +association_method+
-    def cache_attribute_for_association(association_name,association_method)
-      value_cache_options.detect{|k,v| v[:association_name] == association_name.to_sym &&  v[:association_method] ==  association_method.to_sym }.first
-    end
 
   end
 

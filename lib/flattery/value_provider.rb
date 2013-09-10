@@ -28,29 +28,24 @@ module Flattery::ValueProvider
       end
 
       self.value_provider_options ||= {}
+      return if options.empty?
+      self.value_provider_options[:settings] ||= []
+      self.value_provider_options[:resolved] = nil # clear resolved settings
+
       opt = options.symbolize_keys
-      as_setting = opt.delete(:as)
+      as_setting = opt.delete(:as).try(:to_s)
 
-      attribute_key = opt.keys.first
-      association_name = opt[attribute_key]
-      attribute_name = "#{attribute_key}"
+      association_method = opt.keys.first
+      association_name = opt[association_method].try(:to_sym)
 
-      cached_attribute_name = (as_setting || "inflect").to_sym
+      cache_options = {
+        association_name: association_name,
+        association_method: association_method,
+        method: :update_all,
+        as: as_setting
+      }
 
-      assoc = reflect_on_association(association_name)
-      cache_options = if assoc && assoc.macro == :has_many
-        {
-          association_name: association_name,
-          cached_attribute_name: cached_attribute_name,
-          method: :update_all
-        }
-      end
-
-      if cache_options
-        self.value_provider_options[attribute_name] = cache_options
-      else
-        self.value_provider_options.delete(attribute_name)
-      end
+      self.value_provider_options[:settings] << cache_options
     end
 
   end

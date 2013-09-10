@@ -25,4 +25,8 @@ RSpec.configure do |config|
   config.before do
     truncate_records
   end
+
+  config.after do
+    clear_harness_classes
+  end
 end
