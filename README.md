@@ -32,19 +32,25 @@ Or install it yourself as:
 
 ## Usage
 
-### How to define a model that has cached values from a :belongs_to association
+### How to cache values from a :belongs_to association
 
-Given a model with a :category assoociation, and you want to cache instance.category.name as instance.category_name.
+Given a model with a :belongs_to association, you want to store a (copy/cached) value from the associated record.
 
-First, add a migration to add :category_name column to your table with the same type as category.name.
-Then just include Flattery::ValueCache in your model and define flatten_values like this:
+    class Category < ActiveRecord::Base
+      has_many :notes, :inverse_of => :category
+    end
 
     class Note < ActiveRecord::Base
-      belongs_to :category
+      belongs_to :category, :inverse_of => :notes
 
       include Flattery::ValueCache
       flatten_value :category => :name
     end
+
+In this case, when you save an instance of Note, it will store the instance.category.name value as instance.category_name.
+The :category_name attribute is inferred from the relationship, and is assumed to be present in the schema.
+So before you can use this, you must add a migration to add the :category_name column to the notes table (with the same type as the :name column on the Category table).
+
 
 ### How to cache the value in a specific column name
 
@@ -58,12 +64,12 @@ If you want to store in another column name, use the :as option on the +flatten_
       flatten_value :category => :name, :as => 'cat_name'
     end
 
+Again, you must make sure the column is correctly defined in your schema.
+
 ### How to push updates to cached values from the source model
 
-Given a model with a :category assoociation, and a flattery config that caches instance.category.name to instance.category_name,
-you want the category_name cached value updated if the category.name changes.
-
-This is achieved by adding the Flattery::ValueProvider to the source model and defining push_flattened_values_for like this:
+Given the example above, we have a problem if Category records are updated - the :category_name value stored in Notes gets out of sync.
+The Flattery::ValueProvider module fixes this by propagating changes accordingly.
 
     class Category < ActiveRecord::Base
       has_many :notes
@@ -72,7 +78,7 @@ This is achieved by adding the Flattery::ValueProvider to the source model and d
       push_flattened_values_for :name => :notes
     end
 
-This will respect the flatten_value settings defined in that target mode (Note in this example).
+This will push changes to Category :name to Notes records (by inference, updating the :category_name value in Notes).
 
 ### How to push updates to cached values from the source model to a specific cache column name
 
@@ -86,7 +92,6 @@ To 'help' flattery figure out the correct column name, specify the column name w
       include Flattery::ValueProvider
       push_flattened_values_for :name => :notes, :as => 'cat_name'
     end
-
 
 
 ## Contributing
