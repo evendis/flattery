@@ -2,8 +2,6 @@ module Flattery::ValueCache
   extend ActiveSupport::Concern
 
   included do
-    class_attribute :value_cache_options
-    self.value_cache_options = Settings.new(self)
     before_save Processor.new
   end
 
@@ -22,6 +20,18 @@ module Flattery::ValueCache
     #
     def flatten_value(options={})
       self.value_cache_options.add_setting(options)
+    end
+
+    # Returns the Flattery::ValueCache options value object.
+    # It will inherit settings from a parent class if a model hierarchy has been defined
+    def value_cache_options
+      @value_cache_options ||= if superclass.respond_to?(:value_cache_options)
+        my_settings = Settings.new(self)
+        my_settings.raw_settings = superclass.value_cache_options.raw_settings.dup
+        my_settings
+      else
+        Settings.new(self)
+      end
     end
 
   end

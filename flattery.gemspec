@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Flattery::VERSION
   spec.authors       = ["Paul Gallagher"]
   spec.email         = ["paul@evendis.com"]
-  spec.description   = %q{Flatten/normalise values from ActiveModel associations}
-  spec.summary       = %q{Flatter your nicely normalised AR models}
+  spec.description   = %q{a gem to denormalize (flatten) selected ActiveRecord association attributes and automatically keep them in sync with the normal form}
+  spec.summary       = %q{Flatter your nicely normalized ActiveRecord models}
   spec.homepage      = "https://github.com/evendis/flattery"
   spec.license       = "MIT"
 
