@@ -14,6 +14,19 @@ describe Flattery::ValueCache do
     it { should include(Flattery::ValueCache) }
   end
 
+  describe "#before_save" do
+    let(:processor_class) { Flattery::ValueCache::Processor }
+    it "should be called when record created" do
+      processor_class.any_instance.should_receive(:before_save).and_return(true)
+      resource_class.create!
+    end
+    it "should be called when record updated" do
+      instance = resource_class.create!
+      processor_class.any_instance.should_receive(:before_save).and_return(true)
+      instance.save
+    end
+  end
+
   describe "##value_cache_options" do
     before { resource_class.flatten_value flatten_value_options }
     subject { resource_class.value_cache_options }
@@ -96,61 +109,6 @@ describe Flattery::ValueCache do
 
     end
 
-  end
-
-  describe "#before_save" do
-    let(:processor_class) { Flattery::ValueCache::Processor }
-    it "should be called when record created" do
-      processor_class.any_instance.should_receive(:before_save).and_return(true)
-      resource_class.create!
-    end
-    it "should be called when record updated" do
-      instance = resource_class.create!
-      processor_class.any_instance.should_receive(:before_save).and_return(true)
-      instance.save
-    end
-  end
-
-  describe "#before_save" do
-    let!(:resource) { resource_class.create }
-
-    context "with simple belongs_to associations with cached values" do
-      before { resource_class.flatten_value category: :name }
-      let!(:category) { Category.create(name: 'category_a') }
-
-      context "when association is changed by id" do
-        it "should cache the new value" do
-          expect {
-            resource.update_attributes(category_id: category.id)
-          }.to change {
-            resource.category_name
-          }.from(nil).to(category.name)
-        end
-      end
-      context "when already set" do
-        before { resource.update_attributes(category_id: category.id) }
-        context "then set to nil" do
-          it "should cache the new value" do
-            expect {
-              resource.update_attributes(category_id: nil)
-            }.to change {
-              resource.category_name
-            }.from(category.name).to(nil)
-          end
-        end
-        context "and associated record is destroyed" do
-          before { category.destroy }
-          it "should not recache the value when other values updated" do
-            expect {
-              resource.update_attributes(name: 'a new name')
-            }.to_not change {
-              resource.category_name
-            }.from(category.name)
-          end
-        end
-      end
-
-    end
   end
 
 end
