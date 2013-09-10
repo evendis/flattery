@@ -14,15 +14,15 @@ describe Flattery::ValueProvider do
   its(:included_modules) { should include(Flattery::ValueProvider) }
   its(:value_provider_options) { should be_a(Flattery::ValueProvider::Settings) }
 
-  describe "#before_update" do
+  describe "#after_update" do
     let(:processor_class) { Flattery::ValueProvider::Processor }
     it "should not be called when record created" do
-      processor_class.any_instance.should_receive(:before_update).never
+      processor_class.any_instance.should_receive(:after_update).never
       provider_class.create!
     end
     it "should be called when record updated" do
       instance = provider_class.create!
-      processor_class.any_instance.should_receive(:before_update).and_return(true)
+      processor_class.any_instance.should_receive(:after_update).and_return(true)
       instance.save
     end
   end

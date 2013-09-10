@@ -4,7 +4,7 @@ module Flattery::ValueProvider
   included do
     class_attribute :value_provider_options
     self.value_provider_options = Settings.new(self)
-    before_update Processor.new
+    after_update Processor.new
   end
 
   module ClassMethods

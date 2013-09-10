@@ -1,7 +1,7 @@
 class Flattery::ValueProvider::Processor
 
   # Command: pushes cache updates for related changed attributes
-  def before_update(record)
+  def after_update(record)
     resolved_options!(record.class).each do |key,options|
       if record.changed.include?(key)
         if cache_column = options[:as]
