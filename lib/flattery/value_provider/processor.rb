@@ -5,10 +5,13 @@ class Flattery::ValueProvider::Processor
     resolved_options!(record.class).each do |key,options|
       if record.changed.include?(key)
         if cache_column = options[:as]
+          new_value = record.send(key)
+          association_name = options[:to_entity]
           case options[:method]
           when :update_all
-            new_value = record.send(key)
-            record.send(options[:to_entity]).update_all({cache_column => new_value})
+            record.send(association_name).update_all({cache_column => new_value})
+          else # it is a custom update method
+            record.send(options[:method],key.to_sym,new_value,association_name,cache_column)
           end
         else
           raise Flattery::CacheColumnInflectionError.new("#{record.class.name} #{key}: #{options}")

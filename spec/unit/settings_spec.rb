@@ -76,9 +76,9 @@ describe Flattery::Settings do
     end
 
     context "when optional :method specified as Symbols" do
-      before { settings.add_setting({category: :name, method: :update_all}) }
+      before { settings.add_setting({category: :name, method: :my_custom_updater}) }
       its(:raw_settings) { should eql([
-        { from_entity: :category, to_entity: :name, as: nil, method: :update_all }
+        { from_entity: :category, to_entity: :name, as: nil, method: :my_custom_updater }
       ]) }
     end
 
