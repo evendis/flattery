@@ -2,6 +2,7 @@ require 'spec_helper.rb'
 
 # Test caching in a range of actual scenarios
 describe Flattery::ValueProvider::Processor do
+  let(:processor_class) { Flattery::ValueProvider::Processor }
 
   context "with provider having simple has_many association and explicit cache_column name" do
     let(:provider_class) do
@@ -161,5 +162,81 @@ describe Flattery::ValueProvider::Processor do
     end
   end
 
+  context "with delayed job support stubbed" do
+    before do
+      processor_class.any_instance.stub(:delay)
+    end
+
+    context "and background processing requested" do
+
+      let(:provider_class) do
+        class ::ValueProviderHarness < Category
+          include Flattery::ValueProvider
+          push_flattened_values_for name: :notes, as: :category_name, background_with: :delayed_job
+        end
+        ValueProviderHarness
+      end
+
+      let(:cache_class) do
+        class ::ValueCacheHarness < Note
+          include Flattery::ValueCache
+          flatten_value category: :name
+        end
+        ValueCacheHarness
+      end
+
+      let!(:resource)       { provider_class.create(name: 'category_a') }
+      let!(:target_a)       { cache_class.create(category_id: resource.id) }
+      let!(:target_other_a) { cache_class.create }
+
+      it "should update via delay" do
+        processor = double()
+        processor.should_receive(:apply_push)
+        processor_class.any_instance.should_receive(:delay).and_return(processor)
+        resource.update_attributes(name: 'new category name')
+      end
+    end
+  end
+
+  context "with delayed job support mocked" do
+    before do
+      processor_class.send(:define_method,:delay) { self }
+    end
+    after do
+      processor_class.send(:undef_method,:delay)
+    end
+
+    context "and background processing requested" do
+
+      let(:provider_class) do
+        class ::ValueProviderHarness < Category
+          include Flattery::ValueProvider
+          push_flattened_values_for name: :notes, as: :category_name, background_with: :delayed_job
+        end
+        ValueProviderHarness
+      end
+
+      let(:cache_class) do
+        class ::ValueCacheHarness < Note
+          include Flattery::ValueCache
+          flatten_value category: :name
+        end
+        ValueCacheHarness
+      end
+
+      let!(:resource)       { provider_class.create(name: 'category_a') }
+      let!(:target_a)       { cache_class.create(category_id: resource.id) }
+      let!(:target_other_a) { cache_class.create }
+
+      it "should push the new cache value" do
+        expect {
+          resource.update_attributes(name: 'new category name')
+        }.to change {
+          target_a.reload.category_name
+        }.from('category_a').to('new category name')
+      end
+
+    end
+  end
 
 end

@@ -25,7 +25,7 @@ describe Flattery::ValueProvider::Settings do
       before { settings.settings }
       its(:resolved) { should be_true }
       its(:settings) { should eql({
-        "name"=>{to_entity: :notes, as: :category_name, method: :update_all}
+        "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil}
       }) }
     end
   end
@@ -65,15 +65,15 @@ describe Flattery::ValueProvider::Settings do
         let(:settings) { parent_provider_class.value_provider_options }
         its(:resolved) { should be_true }
         its(:settings) { should eql({
-          "name"=>{to_entity: :notes, as: :category_name, method: :update_all}
+          "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil}
         }) }
       end
       describe "child" do
         let(:settings) { child_provider_class.value_provider_options }
         its(:resolved) { should be_true }
         its(:settings) { should eql({
-          "name"=>{to_entity: :notes, as: :category_name, method: :update_all},
-          "description"=>{to_entity: :notes, as: :category_description, method: :update_all}
+          "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil},
+          "description"=>{to_entity: :notes, as: :category_description, method: :update_all, background_with: nil}
         }) }
       end
     end

@@ -94,7 +94,7 @@ To help flattery figure out the correct column name, specify the column name wit
 
 ### How are cached values pushed from the source model?
 
-The default mechanism for performing the update of cached values is with the standard ActiveRecord <tt>:update_all</tt> method (scoped to only the affected records).
+The default mechanism for performing the update of cached values is with the standard ActiveRecord <tt>:update_all</tt> method (scoped to only the affected records). This is done in the <tt>after_update</tt> phase of the [ActiveRecord callback lifecycle](http://api.rubyonrails.org/classes/ActiveRecord/Callbacks.html), and does not background the processing by default.
 
 This should be fine for modest applications, but if the update will affect many records - especially if there is a high likelihood of read/write contention - then it may need finessing. Flattery allows you to define your own update procedure for these cases - see the next section.
 
@@ -120,6 +120,25 @@ Use the <tt>:method</tt> option to declare the instance method to be used:
       end
     end
 
+### How can I get cached value updates pushed in the background?
+
+Flattery has support for getting updates done in the background. This is not the default behaviour, and must be defined for each <tt>Flattery::ValueProvider</tt> declaration.
+
+Currently only [Delayed::Job](https://github.com/collectiveidea/delayed_job) is supported. If you want to background with another queue technology, for now the best is to implement this inside a custom update method.
+
+#### How to background with Delayed::Job
+
+Use the <tt>:background_with</tt> option:
+
+    class Category < ActiveRecord::Base
+      has_many :notes
+
+      include Flattery::ValueProvider
+      push_flattened_values_for :name => :notes, :as => 'cat_name', :background_with => :delayed_job
+
+    end
+
+Note that Delayed::Job is not an explicit dependency of Flattery, so to use Delayed::Job you must have separately added and set it up in your project. Flattery will try to use it if available, and fallback to foreground processing if not.
 
 
 ## Contributing

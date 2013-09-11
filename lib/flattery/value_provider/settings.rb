@@ -26,6 +26,7 @@ class Flattery::ValueProvider::Settings < Flattery::Settings
       to_entity = setting[:to_entity]
 
       push_method = setting[:method]
+      background_with = setting[:background_with]
       attribute_name = "#{from_entity}"
 
       assoc = klass.reflect_on_association(to_entity)
@@ -50,7 +51,8 @@ class Flattery::ValueProvider::Settings < Flattery::Settings
         {
           to_entity: to_entity,
           as: cached_attribute_name,
-          method: push_method
+          method: push_method,
+          background_with: background_with
         }
       end
 

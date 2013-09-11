@@ -82,6 +82,13 @@ describe Flattery::Settings do
       ]) }
     end
 
+    context "when optional :background_with specified as Symbols" do
+      before { settings.add_setting({category: :name, background_with: :delayed_job}) }
+      its(:raw_settings) { should eql([
+        { from_entity: :category, to_entity: :name, as: nil, background_with: :delayed_job }
+      ]) }
+    end
+
     context "when given options as String" do
       before { settings.add_setting({'category' => 'name'}) }
       its(:raw_settings) { should eql([
