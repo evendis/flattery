@@ -103,6 +103,27 @@ describe Flattery::Settings do
       ]) }
     end
 
+    describe ":batch_size option" do
+      context "when specified with Symbol keys" do
+        before { settings.add_setting({category: :name, batch_size: 10}) }
+        its(:raw_settings) { should eql([
+          { from_entity: :category, to_entity: :name, as: nil, batch_size: 10 }
+        ]) }
+      end
+      context "when specified with String keys" do
+        before { settings.add_setting({'category' => 'name', 'batch_size' => 10}) }
+        its(:raw_settings) { should eql([
+          { from_entity: :category, to_entity: :name, as: nil, batch_size: 10 }
+        ]) }
+      end
+      context "when not a valid integer" do
+        before { settings.add_setting({category: :name, batch_size: "abc"}) }
+        its(:raw_settings) { should eql([
+          { from_entity: :category, to_entity: :name, as: nil, batch_size: 0 }
+        ]) }
+      end
+    end
+
   end
 
   describe "#settings" do

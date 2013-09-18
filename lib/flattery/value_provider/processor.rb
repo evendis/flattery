@@ -9,10 +9,11 @@ class Flattery::ValueProvider::Processor
           attribute = key.to_sym
           new_value = record.send(key)
           association_name = options[:to_entity]
+          batch_size = options[:batch_size]
           if options[:background_with] == :delayed_job && self.respond_to?(:delay)
-            self.delay.apply_push(record,method,attribute,new_value,association_name,target_attribute)
+            self.delay.apply_push(record,method,attribute,new_value,association_name,target_attribute,batch_size)
           else
-            apply_push(record,method,attribute,new_value,association_name,target_attribute)
+            apply_push(record,method,attribute,new_value,association_name,target_attribute,batch_size)
           end
         else
           raise Flattery::CacheColumnInflectionError.new("#{record.class.name} #{key}: #{options}")
@@ -23,12 +24,24 @@ class Flattery::ValueProvider::Processor
   end
 
   # Command: performs an update for a specific cache setting
-  def apply_push(record,method,attribute,new_value,association_name,target_attribute)
+  def apply_push(record,method,attribute,new_value,association_name,target_attribute,batch_size)
     case method
     when :update_all
-      record.send(association_name).update_all({target_attribute => new_value})
+      if batch_size > 0
+        total_rows_affected = 0
+        rows_affected = 0
+        begin
+          ActiveRecord::Base.connection.transaction do
+            rows_affected = record.send(association_name).where("NOT #{target_attribute} = ?",new_value).limit(batch_size).update_all(target_attribute => new_value)
+            total_rows_affected += rows_affected
+          end
+        end while rows_affected >= batch_size
+        total_rows_affected
+      else
+        record.send(association_name).update_all({target_attribute => new_value})
+      end
     else # it is a custom update method
-      record.send(method,attribute,new_value,association_name,target_attribute)
+      record.send(method,attribute,new_value,association_name,target_attribute,batch_size)
     end
   end
 

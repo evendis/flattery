@@ -2,7 +2,7 @@ class Flattery::ValueProvider::Settings < Flattery::Settings
 
   # Returns the basic settings template
   def setting_template
-    {method: :update_all}
+    {method: :update_all, batch_size: 0}
   end
 
   # Command: sets resolved_settings. Returns true if resolution was success (which will set the resolution status)
@@ -27,6 +27,7 @@ class Flattery::ValueProvider::Settings < Flattery::Settings
 
       push_method = setting[:method]
       background_with = setting[:background_with]
+      batch_size = setting[:batch_size]
       attribute_name = "#{from_entity}"
 
       assoc = klass.reflect_on_association(to_entity)
@@ -52,7 +53,8 @@ class Flattery::ValueProvider::Settings < Flattery::Settings
           to_entity: to_entity,
           as: cached_attribute_name,
           method: push_method,
-          background_with: background_with
+          background_with: background_with,
+          batch_size: batch_size
         }
       end
 

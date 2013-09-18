@@ -98,6 +98,19 @@ The default mechanism for performing the update of cached values is with the sta
 
 This should be fine for modest applications, but if the update will affect many records - especially if there is a high likelihood of read/write contention - then it may need finessing. Flattery allows you to define your own update procedure for these cases - see the next section.
 
+### How to updating cached values with batched transactional update
+
+Use the <tt>:batch_size</tt> option to define the batch size:
+
+    class Category < ActiveRecord::Base
+      has_many :notes
+
+      include Flattery::ValueProvider
+      push_flattened_values_for :name => :notes, :as => 'cat_name', :batch_size => 100
+    end
+
+This will update of cached values in batches of the specified size - each wrapped in its own transaction.
+
 ### How to provide a custom method for updating cached values
 
 Use the <tt>:method</tt> option to declare the instance method to be used:
@@ -108,16 +121,19 @@ Use the <tt>:method</tt> option to declare the instance method to be used:
       include Flattery::ValueProvider
       push_flattened_values_for :name => :notes, :as => 'cat_name', :method => :my_custom_updater
 
-      # You custom update method definition. Parameters:
+      # Your custom update method definition. Parameters:
       # * +attribute+ is the attribute name that the value is coming from e.g. :name
       # * +new_value+ is the new value that has been set e.g. 'a value that was just set'
       # * +association_name+ is the association that updates need to be pushed to set e.g. :notes
-      # * +target_attribute+ is the attribute name that needs to be updated   e.g. :cat_name
-      def my_custom_updater(attribute,new_value,association_name,target_attribute)
+      # * +target_attribute+ is the attribute name that needs to be updated e.g. :cat_name
+      # * +batch_size+ is desired batch size to use for updates. 0 or nil implies no batch limits. e.g. 10
+      #
+      def my_custom_updater(attribute,new_value,association_name,target_attribute,batch_size)
         # implement your custom update algorithm here. It could do some funky batched SQL for example.
-        # For now here's just a simple update_all implementation:
+        # For now, here's just a simple update_all implementation:
         self.send(association_name).update_all(target_attribute => new_value)
       end
+
     end
 
 ### How can I get cached value updates pushed in the background?

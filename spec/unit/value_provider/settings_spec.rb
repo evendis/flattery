@@ -17,7 +17,7 @@ describe Flattery::ValueProvider::Settings do
     context "before resolution" do
       it { should be_a(settings_class) }
       its(:raw_settings) { should eql([
-        {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all}
+        {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0}
       ]) }
       its(:resolved) { should be_false }
     end
@@ -25,7 +25,7 @@ describe Flattery::ValueProvider::Settings do
       before { settings.settings }
       its(:resolved) { should be_true }
       its(:settings) { should eql({
-        "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil}
+        "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0}
       }) }
     end
   end
@@ -48,14 +48,14 @@ describe Flattery::ValueProvider::Settings do
       describe "parent" do
         let(:settings) { parent_provider_class.value_provider_options }
         its(:raw_settings) { should eql([
-          {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all}
+          {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0}
         ]) }
       end
       describe "child" do
         let(:settings) { child_provider_class.value_provider_options }
         its(:raw_settings) { should eql([
-          {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all},
-          {from_entity: :description, to_entity: :notes, as: 'category_description', method: :update_all}
+          {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0},
+          {from_entity: :description, to_entity: :notes, as: 'category_description', method: :update_all, batch_size: 0}
         ]) }
       end
     end
@@ -65,15 +65,15 @@ describe Flattery::ValueProvider::Settings do
         let(:settings) { parent_provider_class.value_provider_options }
         its(:resolved) { should be_true }
         its(:settings) { should eql({
-          "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil}
+          "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0}
         }) }
       end
       describe "child" do
         let(:settings) { child_provider_class.value_provider_options }
         its(:resolved) { should be_true }
         its(:settings) { should eql({
-          "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil},
-          "description"=>{to_entity: :notes, as: :category_description, method: :update_all, background_with: nil}
+          "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0},
+          "description"=>{to_entity: :notes, as: :category_description, method: :update_all, background_with: nil, batch_size: 0}
         }) }
       end
     end

@@ -35,6 +35,37 @@ describe Flattery::ValueProvider::Processor do
     end
   end
 
+  context "with a custom batch size" do
+    let(:provider_class) do
+      class ::ValueProviderHarness < Category
+        include Flattery::ValueProvider
+        push_flattened_values_for name: :notes, as: :category_name, batch_size: 10
+      end
+      ValueProviderHarness
+    end
+
+    let(:cache_class) do
+      class ::ValueCacheHarness < Note
+        include Flattery::ValueCache
+        flatten_value category: :name
+      end
+      ValueCacheHarness
+    end
+
+    let!(:resource)       { provider_class.create(name: 'category_a') }
+    let!(:target_a)       { cache_class.create(category_id: resource.id) }
+    let!(:target_other_a) { cache_class.create }
+    context "when cached value is updated" do
+      it "should push the new cache value" do
+        expect {
+          resource.update_attributes(name: 'new category name')
+        }.to change {
+          target_a.reload.category_name
+        }.from('category_a').to('new category name')
+      end
+    end
+  end
+
   context "with provider that cannot correctly infer the cache column name" do
     let(:provider_class) do
       class ::ValueProviderHarness < Category
@@ -133,7 +164,7 @@ describe Flattery::ValueProvider::Processor do
       class ::ValueProviderHarness < Category
         include Flattery::ValueProvider
         push_flattened_values_for name: :notes, as: :category_name, method: :my_updater_method
-        def my_updater_method(attribute,new_value,association_name,target_attribute)
+        def my_updater_method(attribute,new_value,association_name,target_attribute,batch_size)
           self.send(association_name).update_all(target_attribute => "#{new_value} (set by my_updater_method)")
         end
       end
