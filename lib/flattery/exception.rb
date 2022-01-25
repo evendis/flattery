@@ -1,5 +1,4 @@
 module Flattery
-
   # A general exception
   class Error < StandardError; end
 
@@ -8,5 +7,4 @@ module Flattery
 
   # Raised when cannot successfully iget a valid association
   class InvalidAssociationError < Error; end
-
 end

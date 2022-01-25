@@ -6,7 +6,6 @@ module Flattery::ValueProvider
   end
 
   module ClassMethods
-
     # Command: adds flattery definition +options+.
     # The +options+ define a single cache setting. To define multiple cache settings, call over again for each setting.
     #
@@ -33,9 +32,7 @@ module Flattery::ValueProvider
         Settings.new(self)
       end
     end
-
   end
-
 end
 
 require "flattery/value_provider/settings"

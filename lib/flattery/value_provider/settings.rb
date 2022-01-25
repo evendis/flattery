@@ -1,5 +1,4 @@
 class Flattery::ValueProvider::Settings < Flattery::Settings
-
   # Returns the basic settings template
   def setting_template
     {method: :update_all, batch_size: 0}
@@ -21,7 +20,7 @@ class Flattery::ValueProvider::Settings < Flattery::Settings
   # If any of these fail, the setting is excluded from the resolved options.
   #
   def resolve_settings!
-    self.resolved_settings = raw_settings.each_with_object({}) do |setting,memo|
+    self.resolved_settings = raw_settings.each_with_object({}) do |setting, memo|
       from_entity = setting[:from_entity]
       to_entity = setting[:to_entity]
 
@@ -32,7 +31,6 @@ class Flattery::ValueProvider::Settings < Flattery::Settings
 
       assoc = klass.reflect_on_association(to_entity)
       cache_options = if assoc && assoc.macro == :has_many
-
         cached_attribute_name = if setting[:as].present?
           setting[:as].to_sym
         else
@@ -74,5 +72,4 @@ class Flattery::ValueProvider::Settings < Flattery::Settings
       klass.value_cache_options.settings.detect{|k,v| v[:from_entity] == association_name.to_sym &&  v[:to_entity] ==  association_method.to_sym }.first
     end
   end
-
 end

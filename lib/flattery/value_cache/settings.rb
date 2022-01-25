@@ -1,5 +1,4 @@
 class Flattery::ValueCache::Settings < Flattery::Settings
-
   # Command: sets resolved_settings. Returns true if resolution was success (which will set the resolution status)
   #
   # Given raw settings: [{ from_entity: :category, to_entity: :name, as: 'cat_name' }]
@@ -40,5 +39,4 @@ class Flattery::ValueCache::Settings < Flattery::Settings
     end
     true
   end
-
 end

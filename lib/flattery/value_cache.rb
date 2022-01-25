@@ -6,7 +6,6 @@ module Flattery::ValueCache
   end
 
   module ClassMethods
-
     # Command: adds flattery definition +options+.
     # The +options+ define a single cache setting. To define multiple cache settings, call flatten_value once for each setting.
     #
@@ -33,9 +32,7 @@ module Flattery::ValueCache
         Settings.new(self)
       end
     end
-
   end
-
 end
 
 require "flattery/value_cache/settings"

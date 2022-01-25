@@ -1,9 +1,7 @@
-
 ActiveRecord::Base.establish_connection(:adapter => 'sqlite3', :database => ":memory:")
 
 ActiveRecord::Migration.suppress_messages do
   ActiveRecord::Schema.define(:version => 0) do
-
     create_table(:notes, :force => true) do |t|
       t.string :name;
       t.belongs_to :category;
@@ -30,7 +28,6 @@ ActiveRecord::Migration.suppress_messages do
       t.string :username;
       t.string :email;
     end
-
   end
 end
 
@@ -54,7 +51,6 @@ class Person < ActiveRecord::Base
 end
 
 module ArHelper
-
   # Clears any configuration
   def truncate_records
     Note.delete_all
@@ -68,7 +64,6 @@ module ArHelper
     Object.send(:remove_const, :ValueCacheHarness) if Object.constants.include?(:ValueCacheHarness)
     Object.send(:remove_const, :ChildValueCacheHarness) if Object.constants.include?(:ChildValueCacheHarness)
   end
-
 end
 
 RSpec.configure do |conf|

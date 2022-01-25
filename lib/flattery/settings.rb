@@ -1,5 +1,4 @@
 class Flattery::Settings
-
   attr_accessor :klass
   attr_accessor :raw_settings
   attr_accessor :resolved_settings
@@ -71,5 +70,4 @@ class Flattery::Settings
   def resolve_settings!
     true
   end
-
 end

@@ -1,151 +1,185 @@
 require 'spec_helper.rb'
 
 describe Flattery::Settings do
-  let(:settings_class) { Flattery::Settings }
-  let(:settings) { settings_class.new }
-  subject { settings }
+  subject(:settings) { described_class.new }
 
-  describe "#initialize" do
-    its(:klass) { should be_nil }
-    its(:raw_settings) { should eql([]) }
-    its(:resolved_settings) { should eql({}) }
-    its(:resolved) { should be_false}
+  describe ".new" do
+    it 'has the expected defaults' do
+      expect(subject.klass).to be_nil
+      expect(subject.raw_settings).to eql([])
+      expect(subject.resolved_settings).to eql({})
+      expect(subject.resolved).to eql(false)
+    end
     context "when given class parameter" do
+      subject(:settings) { described_class.new(klass) }
       let(:klass) { String }
-      let(:settings) { settings_class.new(klass) }
-      its(:klass) { should eql(klass) }
+      it 'has the expected defaults' do
+        expect(subject.klass).to eql(klass)
+      end
     end
   end
 
   def add_dummy_settings_values
-    settings.raw_settings = [1,2,3,4]
+    settings.raw_settings = [1, 2, 3, 4]
     settings.resolved_settings = {a: :b}
     settings.resolved = true
     settings
   end
 
-  describe "#reset!" do
-    before do
+  describe ".reset!" do
+    subject { settings.reset! }
+    it 'reverts all settings to defaults' do
       add_dummy_settings_values
-      settings.reset!
+      expect { subject }.to change { settings.raw_settings }.from([1, 2, 3, 4]).to([])
+      expect(settings.resolved_settings).to eql({})
+      expect(settings.resolved).to eql(false)
     end
-    its(:raw_settings) { should eql([]) }
-    its(:resolved_settings) { should eql({}) }
-    its(:resolved) { should be_false}
   end
 
-  describe "#add_setting" do
-
+  describe ".add_setting" do
+    subject { settings.add_setting(new_setting) }
     context "when given empty hash" do
-      before { add_dummy_settings_values }
-      it "should not do anything" do
-        expect { settings.add_setting({}) }.to_not change { settings.raw_settings }.from([1,2,3,4])
+      let(:new_setting) { {} }
+      it "does nothing" do
+        add_dummy_settings_values
+        expect { subject }.to_not change { settings.raw_settings }.from([1,2,3,4])
       end
     end
 
     context "when given nil" do
+      let(:new_setting) {}
       it "should cause a reset!" do
-        settings.should_receive(:reset!)
-        settings.add_setting(nil)
+        expect(settings).to receive(:reset!)
+        subject
       end
     end
 
     context "when given options as Symbols" do
-      before { settings.add_setting({category: :name}) }
-      its(:raw_settings) { should eql([
-        { from_entity: :category, to_entity: :name, as: nil }
-      ]) }
+      let(:new_setting) { { category: :name } }
+      it 'records the setting' do
+        expect { subject }.to change { settings.raw_settings }.to([
+          { from_entity: :category, to_entity: :name, as: nil }
+        ])
+      end
+
       context "and then given another definition" do
-        before { settings.add_setting({person: :email}) }
-        its(:raw_settings) { should eql([
-          { from_entity: :category, to_entity: :name, as: nil },
-          { from_entity: :person, to_entity: :email, as: nil }
-        ]) }
+        let(:another_setting) { { person: :email } }
+        subject do
+          settings.add_setting(new_setting)
+          settings.add_setting(another_setting)
+        end
+        it 'records add settings' do
+          expect { subject }.to change { settings.raw_settings }.to([
+            { from_entity: :category, to_entity: :name, as: nil },
+            { from_entity: :person, to_entity: :email, as: nil }
+          ])
+        end
         context "and then reset with nil" do
-          before { settings.add_setting nil }
-          its(:raw_settings) { should eql([]) }
+          subject do
+            settings.add_setting new_setting
+            settings.add_setting another_setting
+            settings.add_setting nil
+          end
+          it 'clears all settings' do
+            expect { subject }.to change { settings.raw_settings }.to([])
+          end
         end
       end
     end
 
     context "when optional :as specified as Symbols" do
-      before { settings.add_setting({category: :name, as: :cat_name}) }
-      its(:raw_settings) { should eql([
-        { from_entity: :category, to_entity: :name, as: 'cat_name' }
-      ]) }
+      let(:new_setting) { { category: :name, as: :cat_name } }
+      it 'records the setting' do
+        expect { subject }.to change { settings.raw_settings }.to([
+          { from_entity: :category, to_entity: :name, as: 'cat_name' }
+        ])
+      end
     end
 
     context "when optional :method specified as Symbols" do
-      before { settings.add_setting({category: :name, method: :my_custom_updater}) }
-      its(:raw_settings) { should eql([
-        { from_entity: :category, to_entity: :name, as: nil, method: :my_custom_updater }
-      ]) }
+      let(:new_setting) { { category: :name, method: :my_custom_updater } }
+      it 'records the setting' do
+        expect { subject }.to change { settings.raw_settings }.to([
+          { from_entity: :category, to_entity: :name, as: nil, method: :my_custom_updater }
+        ])
+      end
     end
 
     context "when optional :background_with specified as Symbols" do
-      before { settings.add_setting({category: :name, background_with: :delayed_job}) }
-      its(:raw_settings) { should eql([
-        { from_entity: :category, to_entity: :name, as: nil, background_with: :delayed_job }
-      ]) }
+      let(:new_setting) { { category: :name, background_with: :delayed_job } }
+      it 'records the setting' do
+        expect { subject }.to change { settings.raw_settings }.to([
+          { from_entity: :category, to_entity: :name, as: nil, background_with: :delayed_job }
+        ])
+      end
     end
 
     context "when given options as String" do
-      before { settings.add_setting({'category' => 'name'}) }
-      its(:raw_settings) { should eql([
-        { from_entity: :category, to_entity: :name, as: nil }
-      ]) }
+      let(:new_setting) { { 'category' => 'name' } }
+      it 'records the setting' do
+        expect { subject }.to change { settings.raw_settings }.to([
+          { from_entity: :category, to_entity: :name, as: nil }
+        ])
+      end
     end
 
     context "when optional :as specified as String" do
-      before { settings.add_setting({'category' => 'name', 'as' => 'cat_name'}) }
-      its(:raw_settings) { should eql([
-        { from_entity: :category, to_entity: :name, as: 'cat_name' }
-      ]) }
-    end
-
-    describe ":batch_size option" do
-      context "when specified with Symbol keys" do
-        before { settings.add_setting({category: :name, batch_size: 10}) }
-        its(:raw_settings) { should eql([
-          { from_entity: :category, to_entity: :name, as: nil, batch_size: 10 }
-        ]) }
-      end
-      context "when specified with String keys" do
-        before { settings.add_setting({'category' => 'name', 'batch_size' => 10}) }
-        its(:raw_settings) { should eql([
-          { from_entity: :category, to_entity: :name, as: nil, batch_size: 10 }
-        ]) }
-      end
-      context "when not a valid integer" do
-        before { settings.add_setting({category: :name, batch_size: "abc"}) }
-        its(:raw_settings) { should eql([
-          { from_entity: :category, to_entity: :name, as: nil, batch_size: 0 }
-        ]) }
+      let(:new_setting) { { 'category' => 'name', 'as' => 'cat_name' } }
+      it 'records the setting' do
+        expect { subject }.to change { settings.raw_settings }.to([
+          { from_entity: :category, to_entity: :name, as: 'cat_name' }
+        ])
       end
     end
 
+    context "with :batch_size option" do
+      context "specified with Symbol keys" do
+        let(:new_setting) { { category: :name, batch_size: 10 } }
+        it 'records the setting' do
+          expect { subject }.to change { settings.raw_settings }.to([
+            { from_entity: :category, to_entity: :name, as: nil, batch_size: 10 }
+          ])
+        end
+      end
+      context "specified with String keys" do
+        let(:new_setting) { { 'category' => 'name', 'batch_size' => 10 } }
+        it 'records the setting' do
+          expect { subject }.to change { settings.raw_settings }.to([
+            { from_entity: :category, to_entity: :name, as: nil, batch_size: 10 }
+          ])
+        end
+      end
+      context "not a valid integer" do
+        let(:new_setting) { { category: :name, batch_size: 'abc' } }
+        it 'records the setting' do
+          expect { subject }.to change { settings.raw_settings }.to([
+            { from_entity: :category, to_entity: :name, as: nil, batch_size: 0 }
+          ])
+        end
+      end
+    end
   end
 
   describe "#settings" do
-    context "when initialially not resolved" do
-      it "should invoke resolve_settings!" do
-        settings.should_receive(:resolve_settings!)
-        settings.settings
+    subject { settings.settings }
+    context "when initially not resolved" do
+      it "invokes resolve_settings!" do
+        expect(settings).to receive(:resolve_settings!)
+        subject
       end
-      it "should mark as resolved" do
-        expect { settings.settings }.to change { settings.resolved }.from(false).to(true)
+      it "marks as resolved" do
+        expect { subject}.to change { settings.resolved }.from(false).to(true)
       end
     end
-    context "when initialially resolved" do
+    context "when initially resolved" do
       before { add_dummy_settings_values }
-      it "should not invoke resolve_settings!" do
-        settings.should_receive(:resolve_settings!).never
-        settings.settings
+      it "never invokes resolve_settings!" do
+        expect(settings).to_not receive(:resolve_settings!)
+        subject
       end
-      it "should not change resolved status" do
-        expect { settings.settings }.to_not change { settings.resolved }.from(true)
+      it "does not change resolved status" do
+        expect { subject }.to_not change { settings.resolved }.from(true)
       end
     end
   end
-
 end

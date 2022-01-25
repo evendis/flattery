@@ -12,9 +12,14 @@ If you are using NoSQL, you probably wouldn't design your schema in a way for wh
 
 ## Requirements
 
+* Ruby >= 2.7
+* Rails ~> 6.1
+* ActiveRecord (only sqlite and PostgreSQL tested. Others _should_ work; raise an issue if you find problems)
+
+NB: use version 0.1.0 for legacy support:
+
 * Ruby 1.9 or 2
 * Rails 3.x/4.x
-* ActiveRecord (only sqlite and PostgreSQL tested. Others _should_ work; raise an issue if you find problems)
 
 ## Installation
 

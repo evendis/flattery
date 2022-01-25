@@ -1,82 +1,128 @@
 require 'spec_helper.rb'
 
 describe Flattery::ValueProvider::Settings do
-  let(:settings_class) { Flattery::ValueProvider::Settings }
-  let(:settings) { provider_class.value_provider_options }
+  describe '.value_provider_options' do
+    subject(:value_provider_options) { provider_class.value_provider_options }
 
-  subject { settings }
-
-  context "with a standard has_many association" do
-    let(:provider_class) do
-      class ::ValueProviderHarness < Category
-        include Flattery::ValueProvider
-        push_flattened_values_for name: :notes, as: :category_name
+    context "with a standard has_many association" do
+      let(:provider_class) do
+        class ::ValueProviderHarness < Category
+          include Flattery::ValueProvider
+          push_flattened_values_for name: :notes, as: :category_name
+        end
+        ValueProviderHarness
       end
-      ValueProviderHarness
+      context "before resolution" do
+        it 'has expected unresolved settings' do
+          expect(subject).to be_a(described_class)
+          expect(subject.raw_settings).to eql([
+            {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0}
+          ])
+          expect(subject.resolved).to eql(false)
+        end
+      end
+      context "after resolution" do
+        before { subject.settings }
+        it 'has expected resolved settings' do
+          expect(subject).to be_a(described_class)
+          expect(subject.settings).to eql({
+            "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0}
+          })
+          expect(subject.resolved).to eql(true)
+        end
+      end
     end
-    context "before resolution" do
-      it { should be_a(settings_class) }
-      its(:raw_settings) { should eql([
-        {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0}
-      ]) }
-      its(:resolved) { should be_false }
+
+
+    context "with provider that cannot correctly infer the cache column name" do
+      let(:provider_class) do
+        class ::ValueProviderHarness < Category
+          include Flattery::ValueProvider
+          push_flattened_values_for name: :bogative
+        end
+        ValueProviderHarness
+      end
+      context "before resolution" do
+        it 'has expected unresolved settings' do
+          expect(subject).to be_a(described_class)
+          expect(subject.raw_settings).to eql([
+            {from_entity: :name, to_entity: :bogative, as: nil, method: :update_all, batch_size: 0}
+          ])
+          expect(subject.resolved).to eql(false)
+        end
+      end
+      context "after resolution" do
+        before { subject.settings }
+        it 'has expected resolved settings' do
+          expect(subject).to be_a(described_class)
+          expect(subject.settings).to eql({})
+          expect(subject.resolved).to eql(true)
+        end
+      end
     end
-    context "after resolution" do
-      before { settings.settings }
-      its(:resolved) { should be_true }
-      its(:settings) { should eql({
-        "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0}
-      }) }
+
+
+    context "with inherited model definitions and ValueProvider defined in the parent" do
+      let!(:parent_provider_class) do
+        class ::ValueProviderHarness < Category
+          include Flattery::ValueProvider
+          push_flattened_values_for name: :notes, as: :category_name
+        end
+        ValueProviderHarness
+      end
+      let!(:child_provider_class) do
+        class ::ChildValueProviderHarness < ::ValueProviderHarness
+          push_flattened_values_for description: :notes, as: :category_description
+        end
+        ChildValueProviderHarness
+      end
+      context "before resolution" do
+        context "for parent" do
+          subject(:value_provider_options) { parent_provider_class.value_provider_options }
+          it 'has expected unresolved settings' do
+            expect(subject).to be_a(described_class)
+            expect(subject.raw_settings).to eql([
+              {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0}
+            ])
+            expect(subject.resolved).to eql(false)
+          end
+        end
+        context "for child" do
+          subject(:value_provider_options) { child_provider_class.value_provider_options }
+          it 'has expected unresolved settings' do
+            expect(subject).to be_a(described_class)
+            expect(subject.raw_settings).to eql([
+              {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0},
+              {from_entity: :description, to_entity: :notes, as: 'category_description', method: :update_all, batch_size: 0}
+            ])
+            expect(subject.resolved).to eql(false)
+          end
+        end
+      end
+      context "after resolution" do
+        before { parent_provider_class.value_provider_options.settings && child_provider_class.value_provider_options.settings }
+        context "for parent" do
+          subject(:value_provider_options) { parent_provider_class.value_provider_options }
+          it 'has expected resolved settings' do
+            expect(subject).to be_a(described_class)
+            expect(subject.settings).to eql({
+              "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0}
+            })
+            expect(subject.resolved).to eql(true)
+          end
+        end
+        context "for child" do
+          subject(:value_provider_options) { child_provider_class.value_provider_options }
+          it 'has expected resolved settings' do
+            expect(subject).to be_a(described_class)
+            expect(subject.settings).to eql({
+              "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0},
+              "description"=>{to_entity: :notes, as: :category_description, method: :update_all, background_with: nil, batch_size: 0}
+            })
+            expect(subject.resolved).to eql(true)
+          end
+        end
+      end
     end
   end
-
-  context "with inherited model definitions and ValueProvider defined in the parent" do
-    let!(:parent_provider_class) do
-      class ::ValueProviderHarness < Category
-        include Flattery::ValueProvider
-        push_flattened_values_for name: :notes, as: :category_name
-      end
-      ValueProviderHarness
-    end
-    let!(:child_provider_class) do
-      class ::ChildValueProviderHarness < ::ValueProviderHarness
-        push_flattened_values_for description: :notes, as: :category_description
-      end
-      ChildValueProviderHarness
-    end
-    context "before resolution" do
-      describe "parent" do
-        let(:settings) { parent_provider_class.value_provider_options }
-        its(:raw_settings) { should eql([
-          {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0}
-        ]) }
-      end
-      describe "child" do
-        let(:settings) { child_provider_class.value_provider_options }
-        its(:raw_settings) { should eql([
-          {from_entity: :name, to_entity: :notes, as: 'category_name', method: :update_all, batch_size: 0},
-          {from_entity: :description, to_entity: :notes, as: 'category_description', method: :update_all, batch_size: 0}
-        ]) }
-      end
-    end
-    context "after resolution" do
-      before { parent_provider_class.value_provider_options.settings && child_provider_class.value_provider_options.settings}
-      describe "parent" do
-        let(:settings) { parent_provider_class.value_provider_options }
-        its(:resolved) { should be_true }
-        its(:settings) { should eql({
-          "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0}
-        }) }
-      end
-      describe "child" do
-        let(:settings) { child_provider_class.value_provider_options }
-        its(:resolved) { should be_true }
-        its(:settings) { should eql({
-          "name"=>{to_entity: :notes, as: :category_name, method: :update_all, background_with: nil, batch_size: 0},
-          "description"=>{to_entity: :notes, as: :category_description, method: :update_all, background_with: nil, batch_size: 0}
-        }) }
-      end
-    end
-  end
-
 end

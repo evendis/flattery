@@ -1,19 +1,18 @@
 class Flattery::ValueProvider::Processor
-
   # Command: pushes cache updates for related changed attributes
   def after_update(record)
-    resolved_options!(record.class).each do |key,options|
-      if record.changed.include?(key)
-        if target_attribute = options[:as]
+    resolved_options!(record.class).each do |key, options|
+      if record.saved_changes.include?(key)
+        if (target_attribute = options[:as])
           method = options[:method]
           attribute = key.to_sym
           new_value = record.send(key)
           association_name = options[:to_entity]
           batch_size = options[:batch_size]
           if options[:background_with] == :delayed_job && self.respond_to?(:delay)
-            self.delay.apply_push(record,method,attribute,new_value,association_name,target_attribute,batch_size)
+            self.delay.apply_push(record, method, attribute, new_value, association_name, target_attribute, batch_size)
           else
-            apply_push(record,method,attribute,new_value,association_name,target_attribute,batch_size)
+            apply_push(record, method, attribute, new_value, association_name, target_attribute, batch_size)
           end
         else
           raise Flattery::CacheColumnInflectionError.new("#{record.class.name} #{key}: #{options}")
@@ -23,8 +22,12 @@ class Flattery::ValueProvider::Processor
     true
   end
 
+  def trace(value)
+
+  end
+
   # Command: performs an update for a specific cache setting
-  def apply_push(record,method,attribute,new_value,association_name,target_attribute,batch_size)
+  def apply_push(record, method, attribute, new_value, association_name, target_attribute, batch_size)
     case method
     when :update_all
       if batch_size > 0
@@ -49,5 +52,4 @@ class Flattery::ValueProvider::Processor
   def resolved_options!(klass)
     klass.value_provider_options.settings
   end
-
 end

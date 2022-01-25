@@ -2,7 +2,6 @@ require 'spec_helper.rb'
 
 # Now test caching in a range of actual scenarios...
 describe Flattery::ValueCache::Processor do
-
   context "with simple belongs_to associations with cached values" do
     let(:cache_class) do
       class ::ValueCacheHarness < Note
@@ -16,20 +15,20 @@ describe Flattery::ValueCache::Processor do
     let!(:category) { Category.create(name: 'category_a') }
 
     context "when association is changed by id" do
-      it "should cache the new value" do
+      it "caches the new value" do
         expect {
-          resource.update_attributes(category_id: category.id)
+          resource.update(category_id: category.id)
         }.to change {
           resource.category_name
         }.from(nil).to(category.name)
       end
     end
     context "when already set" do
-      before { resource.update_attributes(category_id: category.id) }
+      before { resource.update(category_id: category.id) }
       context "then set to nil" do
-        it "should cache the new value" do
+        it "caches the new value" do
           expect {
-            resource.update_attributes(category_id: nil)
+            resource.update(category_id: nil)
           }.to change {
             resource.category_name
           }.from(category.name).to(nil)
@@ -37,16 +36,14 @@ describe Flattery::ValueCache::Processor do
       end
       context "and associated record is destroyed" do
         before { category.destroy }
-        it "should not recache the value when other values updated" do
+        it "does not recache the value when other values updated" do
           expect {
-            resource.update_attributes(name: 'a new name')
+            resource.update(name: 'a new name')
           }.to_not change {
             resource.category_name
           }.from(category.name)
         end
       end
     end
-
   end
-
 end
